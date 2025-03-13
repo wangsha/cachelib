@@ -1,3 +1,12 @@
+Version 0.13.1
+--------------
+
+UnReleased
+- Added an index for the expiration field in MongoDbCache to improve performance.
+- Modified the _utcnow method to use datetime.UTC if available.
+- Fixed broken test cases. Updated the syntax for branch and path patterns, upgraded action versions, and modified job steps to use new actions for setting up Memcached and Redis
+
+
 Version 0.13.0
 --------------
 

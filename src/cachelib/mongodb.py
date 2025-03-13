@@ -55,7 +55,11 @@ class MongoDbCache(BaseCache):
 
     def _utcnow(self) -> _t.Any:
         """Return a tz-aware UTC datetime representing the current time"""
-        return datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+        if hasattr(datetime, "UTC"):
+            res = datetime.datetime.now(datetime.UTC)
+        else:
+            res = datetime.datetime.utcnow()
+        return res
 
     def _expire_records(self) -> _t.Any:
         res = self.client.delete_many({"expiration": {"$lte": self._utcnow()}})

@@ -21,6 +21,7 @@ def cache_factory(request):
             subkey[0] for value in index_info.values() for subkey in value["key"]
         }
         assert "id" in all_keys, "Failed to create index on 'id' field"
+        assert "expiration" in all_keys, "Failed to create index on 'expiration' field"
         rc.clear()
         return rc
 
