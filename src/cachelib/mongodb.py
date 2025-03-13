@@ -48,6 +48,8 @@ class MongoDbCache(BaseCache):
         }
         if "id" not in all_keys:
             self.client.create_index("id", unique=True)
+        if "expiration" not in all_keys:
+            self.client.create_index("expiration", expireAfterSeconds=0)
         self.key_prefix = key_prefix or ""
         self.collection = collection
 

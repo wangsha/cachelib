@@ -1,3 +1,5 @@
+import time
+
 import pytest
 from clear import ClearTests
 from common import CommonTests
@@ -27,4 +29,17 @@ def cache_factory(request):
 
 
 class TestMongoDbCache(CommonTests, ClearTests, HasTests):
-    pass
+    def test_auto_expire(self):
+        """Test that MongoDB's TTL index automatically expires cache entries."""
+        cache = self.cache_factory()
+        # Set a cache entry with a short timeout
+        cache.set("auto_expire_key", "value", timeout=2)
+
+        # Verify it exists
+        assert cache.get("auto_expire_key") == "value"
+
+        # Wait for expiration (add buffer time for MongoDB TTL monitor)
+        time.sleep(5)
+
+        # Verify it has expired
+        assert cache.get("auto_expire_key") is None
