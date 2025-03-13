@@ -48,12 +48,14 @@ class MongoDbCache(BaseCache):
         }
         if "id" not in all_keys:
             self.client.create_index("id", unique=True)
+        if "expiration" not in all_keys:
+            self.client.create_index("expiration")
         self.key_prefix = key_prefix or ""
         self.collection = collection
 
     def _utcnow(self) -> _t.Any:
         """Return a tz-aware UTC datetime representing the current time"""
-        return datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+        return datetime.datetime.now(datetime.UTC)
 
     def _expire_records(self) -> _t.Any:
         res = self.client.delete_many({"expiration": {"$lte": self._utcnow()}})
