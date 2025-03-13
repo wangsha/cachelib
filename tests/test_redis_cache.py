@@ -31,7 +31,7 @@ class CustomCache(RedisCache):
 @pytest.fixture(autouse=True, params=[RedisCache, CustomCache])
 def cache_factory(request):
     def _factory(self, *args, **kwargs):
-        rc = request.param(*args, port=6360, **kwargs)
+        rc = request.param(*args, **kwargs)
         rc._write_client.flushdb()
         return rc
 
@@ -42,7 +42,6 @@ def my_callable_key() -> str:
     return "bacon"
 
 
-@pytest.mark.usefixtures("redis_server")
 class TestRedisCache(CommonTests, ClearTests, HasTests):
     def test_callable_key(self):
         cache = self.cache_factory()

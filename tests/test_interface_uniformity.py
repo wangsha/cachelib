@@ -14,12 +14,11 @@ from cachelib import SimpleCache
 def create_cache_list(request, tmpdir):
     mc = MemcachedCache()
     mc._client.flush_all()
-    rc = RedisCache(port=6360)
+    rc = RedisCache()
     rc._write_client.flushdb()
     request.cls.cache_list = [FileSystemCache(tmpdir), mc, rc, SimpleCache()]
 
 
-@pytest.mark.usefixtures("redis_server", "memcached_server")
 class TestInterfaceUniformity:
     def test_types_have_all_base_methods(self):
         public_api_methods = [

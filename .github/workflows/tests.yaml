@@ -3,19 +3,19 @@ on:
   push:
     branches:
       - main
-      - '*.x'
+      - "*.x"
     paths-ignore:
-      - 'docs/**'
-      - '*.md'
-      - '*.rst'
+      - "docs/**"
+      - "*.md"
+      - "*.rst"
   pull_request:
     branches:
       - main
-      - '*.x'
+      - "*.x"
     paths-ignore:
-      - 'docs/**'
-      - '*.md'
-      - '*.rst'
+      - "docs/**"
+      - "*.md"
+      - "*.rst"
 jobs:
   tests:
     name: ${{ matrix.name }}
@@ -24,28 +24,34 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {name: Linux, python: '3.11', os: ubuntu-latest, tox: py311}
-          - {name: '3.8', python: '3.8', os: ubuntu-latest, tox: py38}
-          - {name: '3.9', python: '3.9', os: ubuntu-latest, tox: py39}
-          - {name: '3.10', python: '3.10', os: ubuntu-latest, tox: py310}
-          - {name: '3.11', python: '3.11', os: ubuntu-latest, tox: py311}
-          - {name: Typing, python: '3.12', os: ubuntu-latest, tox: typing}
+          - { name: Linux, python: "3.11", os: ubuntu-latest, tox: py311 }
+          - { name: "3.8", python: "3.8", os: ubuntu-latest, tox: py38 }
+          - { name: "3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
+          - { name: "3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
+          - { name: "3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
+          - { name: Typing, python: "3.12", os: ubuntu-latest, tox: typing }
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
       - name: install external dependencies Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install libmemcached-dev memcached redis-server
+          sudo apt-get install libmemcached-dev
+      - name: Setup Memcached
+        uses: niden/actions-memcached@v7
+      - name: Setup Redis
+        uses: supercharge/redis-github-action@1.7.0
+        with:
+          redis-version: latest
       - name: setup dynamodb-local
-        uses: rrainn/dynamodb-action@v2.0.1
+        uses: rrainn/dynamodb-action@v3.0.0
       - name: Start MongoDB
         uses: wbari/start-mongoDB@v0.2
         with:
-          mongoDBVersion: 'latest'
+          mongoDBVersion: "latest"
       - name: update pip
         run: |
           pip install -U wheel
@@ -53,15 +59,15 @@ jobs:
           python -m pip install -U pip
       - name: get pip cache dir
         id: pip-cache
-        run: echo "::set-output name=dir::$(pip cache dir)"
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
       - name: cache pip
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: pip|${{ runner.os }}|${{ matrix.python }}|${{ hashFiles('setup.py') }}|${{ hashFiles('requirements/*.txt') }}
       - name: cache mypy
         if: matrix.tox == 'typing'
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ./.mypy_cache
           key: mypy|${{ matrix.python }}|${{ hashFiles('setup.cfg') }}

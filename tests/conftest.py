@@ -1,10 +1,8 @@
 import os
-import subprocess
 import warnings
 from pathlib import Path
 
 import pytest
-from xprocess import ProcessStarter
 
 
 def under_uwsgi():
@@ -31,48 +29,6 @@ def pytest_sessionfinish(session, exitstatus):
         else:
             with open(script_path, mode="w") as f:
                 f.write(f"import sys; sys.exit({exitstatus})")
-
-
-@pytest.fixture(scope="class")
-def redis_server(xprocess):
-    package_name = "redis"
-    pytest.importorskip(
-        modname=package_name, reason=f"could not find python package {package_name}"
-    )
-
-    class Starter(ProcessStarter):
-        pattern = "[Rr]eady to accept connections"
-        args = ["redis-server", "--port 6360"]
-
-        def startup_check(self):
-            out = subprocess.run(
-                ["redis-cli", "-p", "6360", "ping"], stdout=subprocess.PIPE
-            )
-            return out.stdout == b"PONG\n"
-
-    xprocess.ensure(package_name, Starter)
-    yield
-    xprocess.getinfo(package_name).terminate()
-
-
-@pytest.fixture(scope="class")
-def memcached_server(xprocess):
-    package_name = "pylibmc"
-    pytest.importorskip(
-        modname=package_name, reason=f"could not find python package {package_name}"
-    )
-
-    class Starter(ProcessStarter):
-        pattern = "server listening"
-        args = ["memcached", "-vv"]
-
-        def startup_check(self):
-            out = subprocess.run(["memcached"], stderr=subprocess.PIPE)
-            return b"Address already" in out.stderr
-
-    xprocess.ensure(package_name, Starter)
-    yield
-    xprocess.getinfo(package_name).terminate()
 
 
 class TestData:
