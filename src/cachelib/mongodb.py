@@ -19,6 +19,9 @@ class MongoDbCache(BaseCache):
     :param default_timeout: Set the timeout in seconds after which cache entries
                             expire
     :param key_prefix: A prefix that should be added to all keys.
+    :param skip_index_check: If True, skip index existence checks and creation
+                              during initialization for faster startup. The
+                              caller is responsible for ensuring indexes exist.
 
     """
 
@@ -31,6 +34,7 @@ class MongoDbCache(BaseCache):
         collection: _t.Optional[str] = "cache-collection",
         default_timeout: int = 300,
         key_prefix: _t.Optional[str] = None,
+        skip_index_check: bool = False,
         **kwargs: _t.Any
     ):
         super().__init__(default_timeout)
@@ -42,14 +46,15 @@ class MongoDbCache(BaseCache):
         if client is None or isinstance(client, str):
             client = pymongo.MongoClient(host=client)
         self.client = client[db][collection]
-        index_info = self.client.index_information()
-        all_keys = {
-            subkey[0] for value in index_info.values() for subkey in value["key"]
-        }
-        if "id" not in all_keys:
-            self.client.create_index("id", unique=True)
-        if "expiration" not in all_keys:
-            self.client.create_index("expiration", expireAfterSeconds=0)
+        if not skip_index_check:
+            index_info = self.client.index_information()
+            all_keys = {
+                subkey[0] for value in index_info.values() for subkey in value["key"]
+            }
+            if "id" not in all_keys:
+                self.client.create_index("id", unique=True)
+            if "expiration" not in all_keys:
+                self.client.create_index("expiration", expireAfterSeconds=0)
         self.key_prefix = key_prefix or ""
         self.collection = collection
 
